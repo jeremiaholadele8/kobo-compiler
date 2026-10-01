@@ -84,21 +84,42 @@ impl Scanner {
     }
 
     fn string(&mut self) {
-        // TODO(you): scan a string literal. A string may span lines (1.5); an unterminated one
-        //            is reported at the line it opened on (5.1).
-        todo!("string")
+        let open_line = self.line;
+        while !self.at_end() && self.peek() != '"' {
+            if self.peek() == '\n' {
+                self.line += 1;
+            }
+            self.advance();
+        }
+        if self.at_end() {
+            self.error(open_line, "String is never closed.");
+            return;
+        }
+        self.advance(); // Closing quote
+        self.add(TokenType::Str);
     }
 
     fn number(&mut self) {
-        // TODO(you): scan a number literal: digits, then a fractional part only when a digit
-        //            follows the dot (1.4).
-        todo!("number")
+        while self.peek().is_ascii_digit() {
+            self.advance();
+        }
+        // A dot begins a fractional part only when a digit follows it
+        if self.peek() == '.' && self.peek_next().is_ascii_digit() {
+            self.advance();
+            while self.peek().is_ascii_digit() {
+                self.advance();
+            }
+        }
+        self.add(TokenType::Number);
     }
 
     fn identifier(&mut self) {
-        // TODO(you): scan an identifier, then decide whether it is a keyword; keyword() in
-        //            token.rs does the lookup (1.2, 1.3).
-        todo!("identifier")
+        while self.peek().is_ascii_alphanumeric() || self.peek() == '_' {
+            self.advance();
+        }
+        let word: String = self.src[self.start..self.current].iter().collect();
+        let kind = keyword(&word).unwrap_or(TokenType::Identifier);
+        self.add(kind);
     }
 
     // --- primitives ---------------------------------------------------------------
