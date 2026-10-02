@@ -69,7 +69,15 @@ impl Scanner {
                 self.add(k);
             }
             '/' => {
-                // Will finish this soon
+                if self.matches('/') {
+                    // Once a comment is detected, the scanner runs to the end of the line; 
+                    // The newline is left for the whitespace arm so the line counter moves in exactly one place.
+                    while !self.at_end() && self.peek() != '\n' {
+                        self.advance();
+                    }
+                } else {
+                    self.add(TokenType::Slash);
+                }
             }
             ' ' | '\r' | '\t' => {}
             '\n' => self.line += 1,
